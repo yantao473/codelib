@@ -1,0 +1,32 @@
+gcc -c -Wall -ggdb -DVERSION=\"\"  -lmemcached hashtab.c -o hashtab.o
+hashtab.c: In function ‘parsekv’:
+hashtab.c:123:14: error: ‘MAX_SIZE’ undeclared (first use in this function)
+     char key[MAX_SIZE];
+              ^
+hashtab.c:123:14: note: each undeclared identifier is reported only once for each function it appears in
+hashtab.c:129:5: warning: implicit declaration of function ‘skip_ws’ [-Wimplicit-function-declaration]
+     while(p = skip_ws(p), *p != delim){
+     ^
+hashtab.c:129:13: warning: assignment makes pointer from integer without a cast [enabled by default]
+     while(p = skip_ws(p), *p != delim){
+             ^
+hashtab.c:139:13: warning: assignment makes pointer from integer without a cast [enabled by default]
+     while(p = skip_ws(p), *p){
+             ^
+hashtab.c:124:10: warning: unused variable ‘val’ [-Wunused-variable]
+     char val[MAX_SIZE];
+          ^
+hashtab.c:123:10: warning: unused variable ‘key’ [-Wunused-variable]
+     char key[MAX_SIZE];
+          ^
+hashtab.c: In function ‘args2hashmap’:
+hashtab.c:153:14: warning: assignment makes pointer from integer without a cast [enabled by default]
+     while (p = skip_ws(p), *get_quoted(&p, fdelim, pattern, sizeof(pattern)) != 0) {
+              ^
+hashtab.c:153:5: warning: implicit declaration of function ‘get_quoted’ [-Wimplicit-function-declaration]
+     while (p = skip_ws(p), *get_quoted(&p, fdelim, pattern, sizeof(pattern)) != 0) {
+     ^
+hashtab.c:153:28: error: invalid type argument of unary ‘*’ (have ‘int’)
+     while (p = skip_ws(p), *get_quoted(&p, fdelim, pattern, sizeof(pattern)) != 0) {
+                            ^
+make: *** [hashtab.o] Error 1

@@ -1,0 +1,21 @@
+<nav class="navbar navbar-inverse">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<!-- note the ng-init and ng-click here: -->
+			<button type="button" class="navbar-toggle" ng-init="navCollapsed = true" ng-click="navCollapsed = !navCollapsed">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar">xxx</span>
+				<span class="icon-bar">xxx</span>
+				<span class="icon-bar">xxx</span>
+			</button>
+			<a class="navbar-brand" href="#">Brand</a>
+		</div>
+
+		<div class="collapse navbar-collapse" uib-collapse="navCollapsed">
+			<ul class="nav navbar-nav">
+				<li><a href="#/list">Entry 1</a></li>
+				<li><a href="#/list">Entry 2</a></li>
+			</ul>
+		</div>
+	</div>
+</nav>
