@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>浪云运维平台登录</title>
+        <link rel="shortcut icon" href="/static/favicon.ico"/>
+        <link rel="stylesheet" href="/static/bower_components/bootstrap/dist/css/bootstrap.css" />
+        <style>
+            .content{
+                position: absolute;
+                top: 50%;
+                height: 270px;
+                width: 380px;
+                margin-top: -135px;
+                text-align:center;
+                border-style:solid;
+                border-width:thin;
+                border-color: #ddd;
+                box-shadow: 10px 10px 5px #888888;
+                border-radius:15px;
+                background-color:white;
+            }
+            .bg{
+                background: #d6dbdd url(/static/images/bg_wb_uibody.png) repeat-x 0 0;
+            }
+        </style>
+    </head>
+
+    <body class="bg">
+        <div class="col-md-4 col-md-offset-4 content">
+            <h2>云运维登录</h2>
+            <form action="{{url_for('auth.dologin')}}" method="POST" novalidate>
+                <div class="form-group col-md-8 col-md-offset-2">
+                    <input type="text" name="name" placeholder="邮箱前缀" class="form-control input-lg" required>
+                </div>
+                <div class="form-group col-md-8 col-md-offset-2">
+                    <input type="password" name="password" placeholder="动态密码" class="form-control input-lg" required>
+                </div>
+                <div class="col-md-8 col-md-offset-2">
+                    <button type="submit" class="btn btn-lg btn-primary form-control">登录</button>
+                    <input type=hidden value="{{ next or '' }}" name="next" />
+                </div>
+            </form>
+        </div>
+        {%if msg%}
+        <center class="alert alert-danger">
+            <strong>{{ msg }}</strong>
+        </center>
+        {%endif%}
+    </body>
+</html>
