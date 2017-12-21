@@ -4,6 +4,9 @@
 
 import argparse
 import json
+import string
+import random
+import time
 import requests
 
 #   格式：\033[显示方式;前景色;背景色m
@@ -77,7 +80,6 @@ STYLE = {
 
 
 def UseStyle(string, mode='', fore='', back=''):
-
     mode = '%s' % STYLE['mode'][mode] if mode in STYLE['mode'] else ''
     fore = '%s' % STYLE['fore'][fore] if fore in STYLE['fore'] else ''
     back = '%s' % STYLE['back'][back] if back in STYLE['back'] else ''
@@ -99,7 +101,13 @@ def get_data(d, t):
     base_url = "https://kyfw.12306.cn/otn/leftTicket/query?leftTicketDTO.train_date=%s" % d
     params = "&leftTicketDTO.from_station=VNP&leftTicketDTO.to_station=WWP&purpose_codes=ADULT"
     url = '%s%s' % (base_url, params)
-    r = requests.get(url)
+    headers = {
+        'host': 'kyfw.12306.cn',
+        'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36',
+        'referer': 'https://kyfw.12306.cn/otn/leftTicket/init'
+    }
+
+    r = requests.get(url, headers=headers)
     try:
         tmpdict = json.loads(r.text)
         data = tmpdict.get('data')
@@ -112,17 +120,27 @@ def get_data(d, t):
                 break
         if m:
             tmplist = m.split('|')
+
+            shangwu = tmplist[32]
             first = tmplist[31]
             second = tmplist[30]
+            no = tmplist[26]
 
-            h = u'有'
-            n = u'无'
-            if first == n or second == n:
-                print UseStyle('%s %s 无票' % (d, t), mode='bold', fore='red')
-            elif second == h or (second.isalnum() and int(second) > 0):
-                print UseStyle('%s %s 有二等座票' % (d, t), mode='bold', fore='green')
-            elif first == h or (first.isalnum() and int(first) > 0):
-                print UseStyle('%s %s 有一等座票' % (d, t), mode='bold', fore='green')
+            # h = u'有'  # 有票
+            n = u'无'  # 无票
+
+            rlist = []
+            for i in range(6):
+                rlist.append(random.choice(string.letters + string.digits))
+            rstr = ''.join(rlist)
+
+            msg = '商务座: %s 一等座: %s 二等座: %s 无座: %s' % (shangwu.encode(
+                'utf8'), first.encode('utf8'), second.encode('utf8'), no.encode('utf8'))
+            if first == n and second == n and no == n:
+                print UseStyle('%s %s' % (msg, rstr), mode='bold', fore='red')
+            else:
+                print UseStyle('%s %s' % (msg, rstr), mode='bold', fore='green')
+
     except Exception, e:
         print e
 
@@ -131,6 +149,7 @@ def main():
     args = getargs()
     while True:
         get_data(args.date, args.trips)
+        time.sleep(3)
 
 
 if __name__ == '__main__':
