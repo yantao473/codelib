@@ -11,6 +11,8 @@ import smtplib
 import socket
 import struct
 import time
+import urllib
+import urllib2
 from email.mime.text import MIMEText
 from optparse import OptionParser
 
