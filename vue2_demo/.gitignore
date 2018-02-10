@@ -1,0 +1,5 @@
+.*
+*.sql
+*.backup
+phpactor.log
+node_modules/
