@@ -6,7 +6,8 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
     entry: {
-        main: './src/main.js'
+        main: './src/main.js',
+        vendors: ['vue', 'vue-router']
     },
 
     output: {
@@ -33,6 +34,7 @@ module.exports = {
                     presets: ['es2015']
                 }
             },
+
             {
                 test: /\.css$/,
                 use: ExtractTextPlugin.extract({
@@ -40,16 +42,18 @@ module.exports = {
                     use: 'css-loader'
                 })
             },
+
             {
                 test: /\.(png|svg|jpg|gif)$/,
                 use: [{
                     loader: 'file-loader',
                     options: {
                         limit: 10000,
-                        name: 'images/[name]-[hash:8].[ext]'
+                        name: 'img/[name].[ext]'
                     }
                 }]
             },
+
             {
                 test: /\.(eot|woff|woff2|ttf)(\?\S*)?$/,
                 use: [{
@@ -59,8 +63,8 @@ module.exports = {
                         name: 'font/[name]-[hash:8].[ext]'
                     }
                 }]
-
             },
+
             {
                 test: /\.vue$/,
                 use: [

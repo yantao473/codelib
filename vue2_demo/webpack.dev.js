@@ -3,10 +3,7 @@ const common = require('./webpack.common.js');
 const webpack = require('webpack');
 
 module.exports = merge(common, {
-    entry:{
-        vendors: ['vue', 'vue-router']
-    },
-    devtool: 'inline-source-map',
+    devtool: 'source-map',
     output: {
         filename: 'js/[name].[hash].bundle.js'
     },

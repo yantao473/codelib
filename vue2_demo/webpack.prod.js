@@ -5,17 +5,16 @@ const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 
 module.exports = merge(common, {
-    entry:{
-        vendors: ['vue', 'vue-router']
-    },
     devtool: 'source-map',
+
     output: {
         filename: 'js/[name].[chunkhash:8].bundle.js'
     },
     plugins: [
         new UglifyJSPlugin({
             sourceMap: true,
-            compress: {
+            uglifyOptions: {
+                compress: true,
                 warnings: true
             }
         }),

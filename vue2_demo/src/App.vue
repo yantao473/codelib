@@ -1,20 +1,37 @@
 <template>
     <div id="app">
-        <headercomponent></headercomponent>
+        <mheader v-if="$store.state.loginUser"></mheader>
         <transition>
             <router-view></router-view>
         </transition>
     </div>
 </template>
+
 <style>
-body {
-    margin: 0px;
+html, body{
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#app {
+    width:100%;
+    height:100%;
 }
 </style>
 
 <script>
-import headercomponent from './components/headercomponent.vue';
+import mheader from './components/mheader.vue';
 export default {
-    components: {headercomponent}
+    data (){
+        return {
+            isLogin: false
+        };
+    },
+
+    methods:{},
+
+    components: { mheader }
 };
 </script>

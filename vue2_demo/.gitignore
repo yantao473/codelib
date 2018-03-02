@@ -1,5 +1,4 @@
 .*
-*.sql
-*.backup
-phpactor.log
+pdo.php
+public/
 node_modules/
