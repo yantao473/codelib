@@ -115,6 +115,7 @@ def get_data(sdate, trips, sstation, estation):
         'referer': 'https://kyfw.12306.cn/otn/leftTicket/init'
     }
 
+    print url
     r = requests.get(url, headers=headers, timeout=3)
     try:
         tmpdict = json.loads(r.text)
