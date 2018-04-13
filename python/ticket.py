@@ -27,7 +27,7 @@ def get_data(args):
     sstation = args.start_station
     estation = args.end_station
 
-    domain = 'https://kyfw.12306.cn/otn/leftTicket/queryO'
+    domain = 'https://kyfw.12306.cn/otn/leftTicket/query'
     tdate = 'leftTicketDTO.train_date=%s' % sdate
     cfrom = 'leftTicketDTO.from_station=%s' % sstation
     cto = 'leftTicketDTO.to_station=%s' % estation
