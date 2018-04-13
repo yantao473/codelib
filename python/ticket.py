@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 import argparse
 import json
-import re
 import time
+from datetime import datetime
 
 import requests
 
@@ -11,8 +11,9 @@ import prettytable as pt
 
 
 def getargs():
+    curdate = datetime.now().strftime('%Y-%m-%d')
     parser = argparse.ArgumentParser(description='输入订票日期和车次进行查询')
-    parser.add_argument('-d', '--train_date', type=str, help='出发时间', required=True)
+    parser.add_argument('-d', '--train_date', type=str, default=curdate, help='出发时间')
     parser.add_argument('-t', '--train_number', type=str, default='C2239', help='车次')
     parser.add_argument('-s', '--start_station', type=str, default='VNP', help='出发地 北京南为VNP')
     parser.add_argument('-e', '--end_station', type=str, default='WWP', help='目的地 武清为WWP')
@@ -56,6 +57,24 @@ def get_data(args):
             shangwu = t[25]
             if not shangwu:
                 shangwu = t[32]
+
+            green = '\033[32;49;1m%s\033[0m'
+            red = '\033[31;49;1m%s\033[0m'
+
+            if t[26] == u'无':
+                t[26] = red % t[26]
+            else:
+                t[26] = green % t[26]
+
+            if t[30] == u'无':
+                t[30] = red % t[30]
+            else:
+                t[30] = green % t[30]
+
+            if t[31] == u'无':
+                t[31] = red % t[31]
+            else:
+                t[31] = green % t[31]
 
             tb.add_column(u'    车次', [t[3]])
             tb.add_column(u'乘车日期', [sdate])
