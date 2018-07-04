@@ -139,7 +139,7 @@ def main():
     estation = args.end_station.decode('utf-8')
 
     sdate = args.train_date
-    trainNumber = args.train_number
+    trainNumber = args.train_number.upper()
 
     sstation_code = station_mapdict.get(sstation)
     estation_code = station_mapdict.get(estation)
