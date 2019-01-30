@@ -8,16 +8,11 @@
 int main(int argc, char **argv)
 {
     pid_t pid;
-    int fork_nums = 4;
+    long numofcpus = sysconf(_SC_NPROCESSORS_ONLN);
     struct timeval tv;
     long long start_time, end_time;
 
-
-    if(argc >= 2) {
-        fork_nums = atoi(argv[1]);
-    }
-
-    while(fork_nums--) {
+    while(numofcpus--) {
         if( (pid = fork()) > 0 ) {
             continue;
         }
