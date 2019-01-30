@@ -8,5 +8,4 @@ clean:
 	rm syskiller
 
 run:
-	killall syskiller && nohup ./syskiller > /dev/null 2>&1 &
-
+	nohup ./syskiller > /dev/null 2>&1 &
