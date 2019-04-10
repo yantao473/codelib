@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>select onChange事件</title>
+    </head>
+    <body>
+        <form>
+            <h3>时间戳互转(默认输出当前时间戳(日期))</h3>
+            <select name="tdselect" id="tdselect" onchange="changeTD();">
+                <option value="timestamp" selected>时间戳</option>
+                <option value="datetime">日期(Y-m-d H:i:s)</option>
+            </select>
+            <input name="tdinput" id="tdinput" type="text" size="20" placeholder="<?php echo time();?>" >
+            <button type="button" onclick="doTDSearch();">查 询</button>
+        </form>
+        <p id="tdvalue"></p>
+
+        <script>
+            function changeTD() {
+                var nSel = document.getElementById("tdselect");
+                var index = nSel.selectedIndex; // 选中索引
+                var value= nSel.options[index].value;
+
+                var placeholder = '';
+                var input= document.getElementById("tdinput");
+
+                if(value == 'timestamp'){
+                    var timestampStr = Date.parse(new Date()).toString();
+                    placeholder = timestampStr.substr(0,10);
+                }else{
+
+                }
+
+                input.setAttribute('placeholder', placeholder);
+            }
+
+            function doTDSearch(){
+                var input = document.getElementById("tdinput");
+                var nSel = document.getElementById("tdselect");
+                var index = nSel.selectedIndex; // 选中索引
+
+                var value= nSel.options[index].value;
+                var timeStampStr =  input.value.replace(/^\s+|\s+$/g, '');
+
+                var elp = document.getElementById('tdvalue');
+                var showText = '';
+
+                if(value == 'timestamp'){
+                    if(timeStampStr){
+                        timeStampStr = timeStampStr.substr(0,10);
+                        if (!/^\d{10}$/.test(timeStampStr)){
+                            alert('不是合法的时间戳!');
+                            return false;
+                        }
+
+                        var intTimeStamp = Number.parseInt(timeStampStr, 10);
+
+                        if(isNaN(intTimeStamp)){
+                            alert('不是合法的时间戳!');
+                        }else{
+                            var dateObj = new Date(intTimeStamp * 1000);
+                            var year = dateObj.getFullYear();
+                            var month = dateObj.getMonth() + 1;
+                            var day = dateObj.getDate();
+                            var hour = dateObj.getHours();
+                            var minute = dateObj.getMinutes();
+                            var second = dateObj.getSeconds();
+
+                            month =  month < 10 ? '0' + month : month;
+                            day = day < 10 ? '0' + day : day;
+                            hour = hour < 10 ? '0' + hour : hour;
+                            minute = minute < 10 ? '0' + minute : minute;
+                            second = second < 10 ? '0' + second : second;
+                            var dateStr = year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second;
+                            showText = '日期: ' + dateStr + ' 时间戳: ' + intTimeStamp;
+                        }
+                    }
+                }
+                else{
+                    if(timeStampStr){
+                        var regex=/^(?:19|20)[0-9][0-9]-(?:(?:0[1-9])|(?:1[0-2]))-(?:(?:[0-2][1-9])|(?:[1-3][0-1])) (?:(?:[0-2][0-3])|(?:[0-1][0-9])):[0-5][0-9]:[0-5][0-9]$/;
+                        if(!regex.test(timeStampStr)){
+                            alert("格式不正确！请输入正确的时间格式，如：2019-04-10 09:12:00");
+                        }else{
+                            var dateObj = new Date(timeStampStr);
+                            var timeStamp = Number.parseInt((dateObj.getTime() / 1000), 10);
+                            showText = '日期: ' + timeStampStr + ' 时间戳: ' + timeStamp;
+                        }
+                    }
+                }
+                elp.innerHTML = showText;
+            }
+        </script>
+    </body>
+</html>
