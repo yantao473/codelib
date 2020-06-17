@@ -4,8 +4,25 @@
  */
 
 namespace app\api\controller;
+
+
+//$info = [
+//    'iss' => json_encode(['name' => 'zhangsan', 'id' => 1]),
+//    'iat' => time(),
+//    'exp' => time() + 7200,
+//];
+//
+//$token = Jwt::getToken($info);
+//echo $token . '<br/>';
+//
+//$payload = Jwt::verifyToken($token);
+//var_dump($payload);
+
+
 class Jwt
 {
+    const ENCRYPT_METHOD = 'AES-256-CBC';
+    const ACCESS_KEY =  'e1d3bcf4-38d5-41cd-9422-c3629277b7d3';
 
     //头部
     private static $jwtHeader = [
@@ -33,8 +50,11 @@ class Jwt
     {
         $token = '';
         if (is_array($payload)) {
+
             $base64Header = self::base64UrlEncode(json_encode(self::$jwtHeader, JSON_UNESCAPED_UNICODE));
-            $base64Payload = self::base64UrlEncode(json_encode($payload, JSON_UNESCAPED_UNICODE));
+            $payloadStr = json_encode($payload, JSON_UNESCAPED_UNICODE);
+            $payloadStrEncrypt = self::encrypt($payloadStr);
+            $base64Payload = self::base64UrlEncode($payloadStrEncrypt);
             $partToken = sprintf("%s.%s", $base64Header, $base64Payload);
 
             $signature = self::signature($partToken, self::$secretKey, self::$jwtHeader['alg']);
@@ -70,7 +90,7 @@ class Jwt
             return ['code' => 400, 'message' => 'token 不匹配'];
         }
 
-        $payload = json_decode(self::base64UrlDecode($base64Payload), JSON_OBJECT_AS_ARRAY);
+        $payload = json_decode(self::decrypt(self::base64UrlDecode($base64Payload)), JSON_OBJECT_AS_ARRAY);
 
         $time = time();
         //签发时间大于当前服务器时间验证失败
@@ -96,9 +116,9 @@ class Jwt
      * @param string $input 需要编码的字符串
      * @return string
      */
-    private static function base64UrlEncode(string $input)
+    private static function base64UrlEncode(string $data)
     {
-        return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
+        return rtrim( strtr( base64_encode( $data ), '+/', '-_'), '=');
     }
 
     /**
@@ -106,15 +126,9 @@ class Jwt
      * @param string $input 需要解码的字符串
      * @return bool|string
      */
-    private static function base64UrlDecode(string $input)
+    private static function base64UrlDecode(string $data)
     {
-        $remainder = strlen($input) % 4;
-        if ($remainder) {
-            $addlen = 4 - $remainder;
-            $input .= str_repeat('=', $addlen);
-        }
-
-        return base64_decode(strtr($input, '-_', '+/'));
+        return base64_decode( strtr( $data, '-_', '+/') . str_repeat('=', 3 - ( 3 + strlen( $data )) % 4 ));
     }
 
     /**
@@ -129,39 +143,23 @@ class Jwt
         $alg_config = ['HS256' => 'sha256'];
         return self::base64UrlEncode(hash_hmac($alg_config[$alg], $input, $secretKey, true));
     }
-}
 
-////测试和官网是否匹配begin
-//$payload = ['sub' => '1234567890', 'name' => 'John Doe', 'iat' => 1516239022];
-//$jwt = new Jwt;
-//$token = $jwt->getToken($payload);
-//echo "<pre>";
-//echo $token;
-//
-////对token进行验证签名
-//$getPayload = $jwt->verifyToken($token);
-//echo "<br><br>";
-//var_dump($getPayload);
-//echo "<br><br>";
-////测试和官网是否匹配end
-//
-////自己使用测试begin
-//$payload_test = [
-//    'iss' => 'admin',
-//    'iat' => time(),
-//    'exp' => time() + 7200,
-//    'nbf' => time(),
-//    'sub' => 'www.admin.com',
-//    'jti' => md5(uniqid('JWT', true) . time())
-//];
-//
-//$token_test = Jwt::getToken($payload_test);
-//echo "<pre>";
-//echo $token_test;
-//
-////对token进行验证签名
-//$getPayload_test = Jwt::verifyToken($token_test);
-//echo "<br><br>";
-//var_dump($getPayload_test);
-//echo "<br><br>";
-////自己使用时候end
+    private static function encrypt($encrypt) {
+        $ivLength = openssl_cipher_iv_length(self::ENCRYPT_METHOD);
+        $bytes = openssl_random_pseudo_bytes($ivLength, $isStrong);
+        $b64Str = base64_encode($bytes);
+        $iv = substr($b64Str, 0, $ivLength);  // 取 $ivLength 位
+        $realKey = substr(sha1(sha1(self::ACCESS_KEY, true),true), 0, 16);
+        $result = openssl_encrypt($encrypt, self::ENCRYPT_METHOD, $realKey, false, $iv);
+
+        return $iv . $result;
+    }
+
+    private static function decrypt($decrypt) {
+        $iv = substr($decrypt, 0, 16);
+        $realKey = substr(sha1(sha1(self::ACCESS_KEY, true),true), 0, 16);
+        $result = openssl_decrypt(substr($decrypt,16), self::ENCRYPT_METHOD, $realKey, false, $iv);
+
+        return $result;
+    }
+}
