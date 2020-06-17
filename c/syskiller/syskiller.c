@@ -27,7 +27,7 @@ int main(int argc, char **argv)
                 end_time = tv.tv_sec * 1000000 + tv.tv_usec;
             }
             /* usleep(60000); */
-            usleep(35000); // laod about 0.65 * cpu_counts
+            usleep(25000); // laod about 0.65 * cpu_counts
         }
     }
 
