@@ -1,9 +1,0 @@
-项目使用vue2.5.13 + axios + Buefy 架构
-
-项目部署要求环境安装了node npm
-1. 运行 npm install
-2. 运行npm run build
-3. 将 controllers目录, 文件.htaccess   entry.php  favicon.ico 及public下的所有文件和目录(注意：不保留public目录) 放在网站的根目录下
-4. 要求apache 开启mod_rewrite
-5. 将sql下的文件导入到数据库
-6  登录时默认用户名/密码 rock/123546

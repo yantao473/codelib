@@ -1,7 +1,0 @@
-RewriteEngine On
-RewriteBase /
-RewriteRule ^([_/a-zA-Z0-9]+)/([_/a-zA-Z0-9]+)$ /entry.php?mod=$1&act=$2&%{QUERY_STRING}' [L]
-RewriteRule ^index\.html$ - [L]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /index.html [L]
