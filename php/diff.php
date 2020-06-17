@@ -1,4 +1,7 @@
 <?php
+/**
+ * 比较前确保有序，注意数字排序与字符排序有区别
+ * */
 if ($argc != 3) {
     echo "Usage php {$argv[0]} file1 file2" . PHP_EOL;
     exit(0);
