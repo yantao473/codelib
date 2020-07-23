@@ -46,7 +46,8 @@ function encrypt($encrypt, $key) {
 }
 
 function decrypt($decrypt, $key) {
-    $iv = substr($decrypt, 0, 16);
+    $ivLength = openssl_cipher_iv_length(ENCRYPT_METHOD);
+    $iv = substr($decrypt, 0, $ivLength);
     echo 'iv: ' . $iv . PHP_EOL;
     echo 'key: ' . $key . PHP_EOL;
 
