@@ -5,24 +5,23 @@
 
 namespace app\api\controller;
 
-
-$info = [
-   'iss' => json_encode(['name' => 'zhangsan', 'id' => 1]),
-   'iat' => time(),
-   'exp' => time() + 7200,
-];
-
-$token = Jwt::getToken($info);
-//echo $token . '<br/>';
+// $info = [
+//    'iss' => json_encode(['name' => 'zhangsan', 'id' => 1]),
+//    'iat' => time(),
+//    'exp' => time() + 7200,
+// ];
 //
-//$payload = Jwt::verifyToken($token);
-//var_dump($payload);
+// $token = Jwt::getToken($info);
+// echo $token .PHP_EOL;
+//
+// $payload = Jwt::verifyToken($token);
+// var_dump($payload);
 
 
 class Jwt
 {
     const ENCRYPT_METHOD = 'AES-256-CBC';
-    const ACCESS_KEY =  'e1d3bcf4-38d5-41cd-9422-c3629277b7d3';
+    const SECRET_KEY = 'MGQ0YzU3YWQzYWVjMzliN2NhZmIyZjllNGYxZjYy';
 
     //头部
     private static $jwtHeader = [
@@ -30,8 +29,6 @@ class Jwt
         'typ' => 'JWT'  //类型
     ];
 
-    //使用HMAC生成信息摘要时所使用的密钥
-    private static $secretKey = 'MGQ0YzU3YWQzYWVjMzliN2NhZmIyZjllNGYxZjYy';
 
     /**
      * 获取jwt token
@@ -50,17 +47,12 @@ class Jwt
     {
         $token = '';
         if (is_array($payload)) {
-
             $base64Header = self::base64UrlEncode(json_encode(self::$jwtHeader, JSON_UNESCAPED_UNICODE));
             $payloadStr = json_encode($payload, JSON_UNESCAPED_UNICODE);
-            var_dump($payloadStr);
-            $payloadStrEncrypt = self::encrypt($payloadStr);
-            var_dump($payloadStrEncrypt);
-            $base64Payload = self::base64UrlEncode($payloadStrEncrypt);
-            var_dump($base64Payload);
+            $base64Payload = self::encrypt($payloadStr);
             $partToken = sprintf("%s.%s", $base64Header, $base64Payload);
 
-            $signature = self::signature($partToken, self::$secretKey, self::$jwtHeader['alg']);
+            $signature = self::signature($partToken, self::SECRET_KEY, self::$jwtHeader['alg']);
             $token = sprintf("%s.%s", $partToken, $signature);
         }
 
@@ -74,10 +66,11 @@ class Jwt
      */
     public static function verifyToken(string $token)
     {
-
+        $result = ['code' => 403];
         $tokens = explode('.', $token);
         if (count($tokens) !== 3) {
-            return ['code' => 400, 'message' => 'token 长度不合法'];
+            $result['msg'] = 'token 长度不合法';
+            return $result;
         }
 
         list($base64Header, $base64Payload, $sign) = $tokens;
@@ -85,33 +78,41 @@ class Jwt
         //获取jwt算法
         $base64DecodeHeader = json_decode(self::base64UrlDecode($base64Header), JSON_OBJECT_AS_ARRAY);
         if (empty($base64DecodeHeader['alg'])) {
-            return ['code' => 400, 'message' => '不支持的算法'];
+            $result['msg'] = '不支持的算法';
+            return $result;
         }
 
         //签名验证
-        if (self::signature($base64Header . '.' . $base64Payload, self::$secretKey, $base64DecodeHeader['alg']) !== $sign) {
-            return ['code' => 400, 'message' => 'token 不匹配'];
+        if (self::signature($base64Header . '.' . $base64Payload, self::SECRET_KEY, $base64DecodeHeader['alg']) !== $sign) {
+            $result['msg'] = 'token 不匹配';
+            return $result;
         }
 
-        $payload = json_decode(self::decrypt(self::base64UrlDecode($base64Payload)), JSON_OBJECT_AS_ARRAY);
+        // 加密版
+        $payload = json_decode(self::decrypt($base64Payload), JSON_OBJECT_AS_ARRAY);
 
         $time = time();
         //签发时间大于当前服务器时间验证失败
         if (isset($payload['iat']) && $payload['iat'] > $time) {
-            return ['code' => 400, 'message' => '签发时间不合法'];
+            $result['msg'] = '签发时间不合法';
+            return $result;
         }
 
         //过期时间小于当前服务器时间验证失败
         if (isset($payload['exp']) && $payload['exp'] < $time) {
-            return ['code' => 400, 'message' => 'token已过期'];
+            $result['msg'] = 'token已过期';
+            return $result;
         }
 
         //该nbf时间之前不接收处理该Token
         if (isset($payload['nbf']) && $payload['nbf'] > $time) {
-            return ['code' => 400, 'message' => '处理token不合法'];
+            $result['msg'] = '处理token不合法';
+            return $result;
         }
 
-        return ['code' => 0, 'message' => $payload];
+        $result['code'] = 200;
+        $result['msg'] = $payload;
+        return $result;
     }
 
     /**
@@ -121,7 +122,7 @@ class Jwt
      */
     private static function base64UrlEncode(string $data)
     {
-        return rtrim( strtr( base64_encode( $data ), '+/', '-_'), '=');
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
     }
 
     /**
@@ -131,7 +132,7 @@ class Jwt
      */
     private static function base64UrlDecode(string $data)
     {
-        return base64_decode( strtr( $data, '-_', '+/') . str_repeat('=', 3 - ( 3 + strlen( $data )) % 4 ));
+        return base64_decode(strtr($data, '-_', '+/') . str_repeat('=', 3 - (3 + strlen($data)) % 4));
     }
 
     /**
@@ -147,22 +148,33 @@ class Jwt
         return self::base64UrlEncode(hash_hmac($alg_config[$alg], $input, $secretKey, true));
     }
 
-    private static function encrypt($encrypt) {
+    private static function encrypt($encrypt)
+    {
         $ivLength = openssl_cipher_iv_length(self::ENCRYPT_METHOD);
-        $bytes = openssl_random_pseudo_bytes($ivLength, $isStrong);
-        $b64Str = base64_encode($bytes);
-        $iv = substr($b64Str, 0, $ivLength);  // 取 $ivLength 位
-        $realKey = substr(sha1(sha1(self::ACCESS_KEY, true),true), 0, 16);
-        $result = openssl_encrypt($encrypt, self::ENCRYPT_METHOD, $realKey, false, $iv);
+        $iv = openssl_random_pseudo_bytes($ivLength, $isStrong);
+        if (!$isStrong) {
+            // do nothing
+        }
 
-        return $iv . $result;
+        $secKey = self::getSecKey();
+        $finalByteArray = openssl_encrypt($encrypt, self::ENCRYPT_METHOD, $secKey, OPENSSL_RAW_DATA, $iv);
+
+        return self::base64UrlEncode($iv . $finalByteArray);
     }
 
-    private static function decrypt($decrypt) {
-        $iv = substr($decrypt, 0, 16);
-        $realKey = substr(sha1(sha1(self::ACCESS_KEY, true),true), 0, 16);
-        $result = openssl_decrypt(substr($decrypt,16), self::ENCRYPT_METHOD, $realKey, false, $iv);
-
-        return $result;
+    private static function decrypt($decrypt)
+    {
+        $secKey = self::getSecKey();
+        $decStr = self::base64UrlDecode($decrypt);
+        $iv = substr($decStr, 0, 16);
+        $content = substr($decStr, 16);
+        return openssl_decrypt($content, self::ENCRYPT_METHOD, $secKey, OPENSSL_RAW_DATA, $iv);
     }
+
+    private static function getSecKey()
+    {
+        $digestSeed = hash('SHA512', self::SECRET_KEY, true);
+        return substr($digestSeed, 0, 32);
+    }
+
 }
