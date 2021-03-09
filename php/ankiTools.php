@@ -39,19 +39,21 @@ $engyi = trim($engyi, '<br>');
 // 美式发音 mp3 数据 type=1 是英式英语 type=2是美式英语
 $sound = '';
 $mp3Url = sprintf('https://dict.youdao.com/dictvoice?audio=%s&type=2', $word);
-$mp3Path = sprintf('mp3/%s.mp3', $word);
+$mp3Name = sprintf('%s.mp3',  $word);
+$mp3Path = sprintf('media/%s',  $mp3Name);
 downCurl($mp3Url, $mp3Path);
 if (file_exists($mp3Path) && mime_content_type($mp3Path) === "audio/mpeg") {
-    $sound = sprintf('[sound:%s.mp3]', $word);
+    $sound = sprintf('[sound:%s]', $mp3Name);
 }
 
 // 获取图片
 $img = '';
 $imgUrl = sprintf('https://www.quword.com/images/words/%s1.jpg', $word);
-$imgPath = sprintf('img/%s1.jpg', $word);
+$imgName = sprintf('%s.jpg', $word);
+$imgPath = sprintf('media/%s', $imgName);
 downCurl($imgUrl, $imgPath);
 if (file_exists($imgPath) && mime_content_type($imgPath) === "image/jpeg") {
-    $img = sprintf('<img src="%s1.jpg"/>', $word);
+    $img = sprintf('<img src="%s"/>', $imgName);
 }
 
 // 趣词数据
@@ -133,7 +135,7 @@ if ($jiyi) {
     $c .= ';';
 }
 
-echo $c . PHP_EOL;
+file_put_contents($word.'.csv', $c);
 
 function nr2br($m)
 {
