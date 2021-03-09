@@ -1,52 +1,188 @@
 <?php
-
-if($argc != 2){
+if ($argc != 2) {
     echo "Usage: php {$argv[0]} word";
     exit(0);
 }
 
-// $word = 'assumption';
+// mp3 https://dict.youdao.com/dictvoice?audio=scarcely&type=2
+// img https://www.quword.com/images/words/testify1.jpg
+// 朗文 https://www.ldoceonline.com/dictionary/testify
+
 $word = $argv[1];
-
-$content = sendReq($word);
-
+$c = $word . ';';
 $matches = [];
 
-$c = $word;
-if(preg_match('/<div class="row" id="yd-word-pron">(.*?)</is', $content, $matches)){
-    $m = $matches[1];
-    $m = br2space($m);
-    $c .= ','. $m . ',';
+
+// 获取朗文字典数据
+$ldoUrl = 'https://www.ldoceonline.com/dictionary/' . $word;
+$ldoContent = sendReq($ldoUrl);
+
+// 获取分节信息
+if (preg_match('#<span class="HYPHENATION">(.*?)</span>#is', $ldoContent, $matches)) {
+    if ($matches && $matches[1]) {
+        $c .= $matches[1] . ';';
+    }
 }
 
-if(preg_match('/<div class="row" id="yd-word-meaning">(.*?)<\/div>/is', $content, $matches)){
+// 获取英语解释
+$engyi = '';
+if (preg_match_all('#span class="DEF">(.*?)</span>#is', $ldoContent, $matches)) {
+    if ($matches && $matches[1]) {
+        foreach ($matches[1] as $k => $match) {
+            $engyi .= ($k + 1) . ' ' . trim(strip_tags($match)) . '<br>';
+        }
+    }
+}
+$engyi = trim($engyi, '<br>');
+
+
+// 美式发音 mp3 数据 type=1 是英式英语 type=2是美式英语
+$sound = '';
+$mp3Url = sprintf('https://dict.youdao.com/dictvoice?audio=%s&type=2', $word);
+$mp3Path = sprintf('mp3/%s.mp3', $word);
+downCurl($mp3Url, $mp3Path);
+if (file_exists($mp3Path) && mime_content_type($mp3Path) === "audio/mpeg") {
+    $sound = sprintf('[sound:%s.mp3]', $word);
+}
+
+// 获取图片
+$img = '';
+$imgUrl = sprintf('https://www.quword.com/images/words/%s1.jpg', $word);
+$imgPath = sprintf('img/%s1.jpg', $word);
+downCurl($imgUrl, $imgPath);
+if (file_exists($imgPath) && mime_content_type($imgPath) === "image/jpeg") {
+    $img = sprintf('<img src="%s1.jpg"/>', $word);
+}
+
+// 趣词数据
+$qwUrl = 'https://www.quword.com/w/' . $word;
+$qwcontent = sendReq($qwUrl);
+
+if (preg_match('#<div class="row" id="yd-word-pron">(.*?)</div>#is', $qwcontent, $matches)) {
+    if ($matches) {
+        $m = $matches[1];
+        $m = nr2space($m);
+        $c .= $m . ';';
+    }
+}
+
+if ($sound) {
+    $c .= $sound . ';';
+} else {
+    $c .= ';';
+}
+
+if (preg_match('/<div class="row" id="yd-word-meaning">(.*?)<\/div>/is', $qwcontent, $matches)) {
     $m = trim(strip_tags($matches[1]));
-    $c .=  br2space($m);
+    $c .= nr2br($m) . ';';
 }
 
-echo  $c.PHP_EOL;
-
-
-
-function br2space($m){
-    $m .= str_replace(',', ';',$m);
-    $m = preg_replace("/\r\n/is", " ", $m);//回车符是\r\n
-    $m = preg_replace("/\r/is", " ", $m);//回车符是\r
-    $m = preg_replace("/\n/is", " ", $m);//回车符是\n
-    $m = preg_replace("/\n/is", " ", $m);//回车符是\n
-    return $m;
+if ($engyi) {
+    $c .= $engyi . ';';
+} else {
+    $c .= ';';
+}
+if ($img) {
+    $c .= $img . ';';
+} else {
+    $img .= ';';
 }
 
-function sendReq($word){
-    $url = 'https://www.quword.com/w/'.$word;
+
+//  获取例句
+$liju = '';
+if (preg_match('#<div\s*class="row"\s*?id="yd-liju">(.*?)</div>#is', $qwcontent, $matches)) {
+    if ($matches && $matches[1]) {
+        $dtmatches = [];
+        if (preg_match_all('#<dt>(.*?)</dd>#is', $matches[1], $dtmatches)) {
+            if ($dtmatches && $dtmatches[1]) {
+                $dts = $dtmatches[1];
+                $tmpArr = [];
+                foreach ($dts as $dt) {
+                    $dt = str_replace('</dt>', '', $dt);
+                    $dt = str_replace('<dd>', '', $dt);
+                    $tmpArr[] = $dt;
+                }
+
+                $liju = implode('<br>', array_slice($tmpArr, 0, 3));
+            }
+        }
+    }
+}
+
+if ($liju) {
+    $c .= $liju . ';';
+} else {
+    $c .= ';';
+}
+
+// 记忆方法
+$jiyi = '';
+if (preg_match('#记忆方法</h3>.*?</div>(.*?)</div>#is', $qwcontent, $matches)) {
+    if ($matches && $matches[1]) {
+        $m = nr2space($matches[1]);
+        $m = preg_replace('#<br\s*?/*?>#', '\n', $matches[1]);
+        $m = strip_tags($m) . PHP_EOL;
+        $m = str_replace('\n', '<br/>', $m);
+        $jiyi = trim($m);
+    }
+}
+if ($jiyi) {
+    $c .= $jiyi;
+} else {
+    $c .= ';';
+}
+
+echo $c . PHP_EOL;
+
+function nr2br($m)
+{
+    $patten = ["\r\n", "\r", "\n"];
+    return str_replace($patten, '<br/>', $m);
+}
+
+function nr2space($m)
+{
+    $patten = ["\r\n", "\r", "\n"];
+    return str_replace($patten, ' ', $m);
+}
+
+function sendReq($url)
+{
+    $headers = [
+        'Expect:',
+        'Cache-Control: no-cache',
+    ];
 
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL,$url);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-    curl_setopt($ch, CURLOPT_HEADER, 1);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $content = curl_exec($ch);
     curl_close($ch);
 
     return $content;
+}
+
+function downCurl($url, $filePath)
+{
+    $headers = [
+        'Expect:',
+        'Cache-Control: no-cache',
+    ];
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+    $fp = fopen($filePath, 'w+');
+    curl_setopt($ch, CURLOPT_FILE, $fp);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 300);
+
+    curl_exec($ch);
+    curl_close($ch);
+    fclose($fp);
 }
