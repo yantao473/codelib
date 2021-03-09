@@ -1,4 +1,5 @@
 <?php
+define('MEDIA_PATH', '/home/yanqing4/.local/share/Anki2/划词翻译/collection.media/');
 if ($argc != 2) {
     echo "Usage: php {$argv[0]} word";
     exit(0);
@@ -40,7 +41,7 @@ $engyi = trim($engyi, '<br>');
 $sound = '';
 $mp3Url = sprintf('https://dict.youdao.com/dictvoice?audio=%s&type=2', $word);
 $mp3Name = sprintf('%s.mp3',  $word);
-$mp3Path = sprintf('media/%s',  $mp3Name);
+$mp3Path = sprintf(MEDIA_PATH . '%s',  $mp3Name);
 downCurl($mp3Url, $mp3Path);
 if (file_exists($mp3Path) && mime_content_type($mp3Path) === "audio/mpeg") {
     $sound = sprintf('[sound:%s]', $mp3Name);
@@ -50,7 +51,7 @@ if (file_exists($mp3Path) && mime_content_type($mp3Path) === "audio/mpeg") {
 $img = '';
 $imgUrl = sprintf('https://www.quword.com/images/words/%s1.jpg', $word);
 $imgName = sprintf('%s.jpg', $word);
-$imgPath = sprintf('media/%s', $imgName);
+$imgPath = sprintf(MEDIA_PATH . '%s', $imgName);
 downCurl($imgUrl, $imgPath);
 if (file_exists($imgPath) && mime_content_type($imgPath) === "image/jpeg") {
     $img = sprintf('<img src="%s"/>', $imgName);
