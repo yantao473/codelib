@@ -1,5 +1,6 @@
 <?php
 define('MEDIA_PATH', '/home/yanqing4/.local/share/Anki2/划词翻译/collection.media/');
+
 if ($argc != 2) {
     echo "Usage: php {$argv[0]} word";
     exit(0);
@@ -30,11 +31,11 @@ $engyi = '';
 if (preg_match_all('#span class="DEF">(.*?)</span>#is', $ldoContent, $matches)) {
     if ($matches && $matches[1]) {
         foreach ($matches[1] as $k => $match) {
-            $engyi .= ($k + 1) . ' ' . trim(strip_tags($match)) . '<br>';
+            $engyi .= ($k + 1) . ' ' . trim(strip_tags($match)) . '<br/>';
         }
     }
 }
-$engyi = trim($engyi, '<br>');
+$engyi = trim($engyi, '<br/>');
 
 
 // 美式发音 mp3 数据 type=1 是英式英语 type=2是美式英语
@@ -107,7 +108,7 @@ if (preg_match('#<div\s*class="row"\s*?id="yd-liju">(.*?)</div>#is', $qwcontent,
                     $tmpArr[] = $dt;
                 }
 
-                $liju = implode('<br>', array_slice($tmpArr, 0, 3));
+                $liju = implode('<br/>', array_slice($tmpArr, 0, 3));
             }
         }
     }
@@ -123,11 +124,10 @@ if ($liju) {
 $jiyi = '';
 if (preg_match('#记忆方法</h3>.*?</div>(.*?)</div>#is', $qwcontent, $matches)) {
     if ($matches && $matches[1]) {
-        $m = nr2space($matches[1]);
-        $m = preg_replace('#<br\s*?/*?>#', '\n', $matches[1]);
-        $m = strip_tags($m) . PHP_EOL;
-        $m = str_replace('\n', '<br/>', $m);
-        $jiyi = trim($m);
+        $m = trim($matches[1]);
+        $m = nr2space($m);
+        $m = preg_replace('#<div.*?>#is', '', $m);
+        $jiyi = $m;
     }
 }
 if ($jiyi) {
@@ -136,18 +136,23 @@ if ($jiyi) {
     $c .= ';';
 }
 
-file_put_contents($word.'.csv', $c);
+file_put_contents('csv/'. $word.'.csv'.PHP_EOL, $c);
 
 function nr2br($m)
 {
-    $patten = ["\r\n", "\r", "\n"];
-    return str_replace($patten, '<br/>', $m);
+    $m = preg_replace('#(\r\n)+#m', '<br/>', $m);
+    $m = preg_replace('#\r+#m', '<br/>', $m);
+    $m = preg_replace('#\n+#m', '<br/>', $m);
+
+    return $m;
 }
 
 function nr2space($m)
 {
-    $patten = ["\r\n", "\r", "\n"];
-    return str_replace($patten, ' ', $m);
+    $m = preg_replace('#(\r\n)+#m', '', $m);
+    $m = preg_replace('#\r+#m', '', $m);
+    $m = preg_replace('#\n+#m', '', $m);
+    return trim($m);
 }
 
 function sendReq($url)
